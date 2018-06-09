@@ -63,6 +63,7 @@ static int handle_option_n(Tracee *tracee, const Cli *cli, const char *value);
 static int handle_option_R(Tracee *tracee, const Cli *cli, const char *value);
 static int handle_option_S(Tracee *tracee, const Cli *cli, const char *value);
 static int handle_option_kill_on_exit(Tracee *tracee, const Cli *cli, const char *value);
+static int handle_option_link2symlink(Tracee *tracee, const Cli *cli, const char *value);
 
 static int pre_initialize_bindings(Tracee *, const Cli *, size_t, char *const *, size_t);
 static int post_initialize_exe(Tracee *, const Cli *, size_t, char *const *, size_t);
@@ -259,6 +260,17 @@ Copyright (C) 2015 STMicroelectronics, licensed under GPL v2 or later.",
 \tuse the same resulting port. This network \"cooperation\" makes it possible\n\
 \tto run multiple instances of a same program without worrying about the same ports\n\
 \tbeing used twice.",
+	},
+	{ .class = "Extension options",
+	  .arguments = {
+		{ .name = "-l", .separator = '\0', .value = NULL },
+		{ .name = "--link2symlink", .separator = '\0', .value = NULL },
+		{ .name = NULL, .separator = '\0', .value = NULL } },
+	  .handler = handle_option_link2symlink,
+	  .description = "Enable the link2symlink extension.",
+	  .detail = "\tThis extension make proot create symlink when hardlink\n\
+\tshould be created. Some environment don't let user create hardlink, this\n\
+\toption should be use to fix it.",
 	},
 	{ .class = "Alias options",
 	  .arguments = {

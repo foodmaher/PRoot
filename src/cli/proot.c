@@ -323,6 +323,11 @@ static int handle_option_n(Tracee *tracee, const Cli *cli UNUSED, const char *va
 	return status;
 }
 
+static int handle_option_link2symlink(Tracee *tracee, const Cli *cli UNUSED, const char *value UNUSED)
+{
+	return initialize_extension(tracee, link2symlink_callback, NULL);
+}
+
 /**
  * Initialize @tracee->qemu.
  */
@@ -331,11 +336,6 @@ static int post_initialize_exe(Tracee *tracee, const Cli *cli UNUSED,
 {
 	char path[PATH_MAX];
 	int status;
-
-	/* Force the link2symlink extension.  */
-	status = initialize_extension(tracee, link2symlink_callback, NULL);
-	if (status < 0)
-		note(tracee, WARNING, INTERNAL, "link2symlink not initialized");
 
 	/* Nothing else to do ?  */
 	if (tracee->qemu == NULL)
