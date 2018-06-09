@@ -2,7 +2,7 @@
  *
  * This file is part of PRoot.
  *
- * Copyright (C) 2014 STMicroelectronics
+ * Copyright (C) 2015 STMicroelectronics
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -25,10 +25,10 @@
 
 #include <sys/queue.h> /* LIST_, */
 #include <stdint.h>    /* intptr_t, */
-#include <stdbool.h>   /* bool, */
 
 #include "tracee/tracee.h"
 #include "syscall/seccomp.h"
+#include "extension/portmap/portmap.h"
 
 /* List of possible events.  */
 typedef enum {
@@ -159,6 +159,7 @@ typedef LIST_HEAD(extensions, extension) Extensions;
 
 extern int initialize_extension(Tracee *tracee, extension_callback_t callback, const char *cli);
 extern void inherit_extensions(Tracee *child, Tracee *parent, word_t clone_flags);
+extern Extension *get_extension(Tracee *tracee, extension_callback_t callback);
 
 /**
  * Notify all extensions of @tracee that the given @event occured.
@@ -186,5 +187,15 @@ extern int kompat_callback(Extension *extension, ExtensionEvent event, intptr_t 
 extern int fake_id0_callback(Extension *extension, ExtensionEvent event, intptr_t d1, intptr_t d2);
 extern int care_callback(Extension *extension, ExtensionEvent event, intptr_t d1, intptr_t d2);
 extern int link2symlink_callback(Extension *extension, ExtensionEvent event, intptr_t d1, intptr_t d2);
+
+/* Added extensions.  */
+/**
+ * We use a global variable in order to support multiple port mapping options,
+ * otherwise we would have a different extension instance for each (port_in, port_out) pair,
+ * which would be a waste of memory and performance.
+ * This variable is modified only once, in the INITIALIZATION event.
+ */
+extern Extension *global_portmap_extension;
+extern int portmap_callback(Extension *extension, ExtensionEvent event, intptr_t d1, intptr_t d2);
 
 #endif /* EXTENSION_H */

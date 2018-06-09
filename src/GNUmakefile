@@ -16,7 +16,7 @@ OBJDUMP  = $(CROSS_COMPILE)objdump
 
 CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I. -I$(VPATH)
 CFLAGS   += -Wall -Wextra -O2
-LDFLAGS  += -ltalloc
+LDFLAGS  += -ltalloc -Wl,-z,noexecstack
 
 CARE_LDFLAGS = -larchive
 
@@ -45,6 +45,7 @@ OBJECTS += \
 	syscall/sysnum.o	\
 	syscall/socket.o	\
 	syscall/heap.o		\
+	syscall/rlimit.o	\
 	tracee/tracee.o		\
 	tracee/mem.o		\
 	tracee/reg.o		\
@@ -56,6 +57,8 @@ OBJECTS += \
 	extension/kompat/kompat.o \
 	extension/fake_id0/fake_id0.o \
 	extension/link2symlink/link2symlink.o \
+	extension/portmap/portmap.o \
+	extension/portmap/map.o \
 	loader/loader-wrapped.o
 
 define define_from_arch.h
@@ -142,9 +145,9 @@ LINK    = $($(quiet)LD) -o $@ $^ $(LDFLAGS)
 OBJIFY = $($(quiet)GEN)									\
 	$(OBJCOPY)									\
 		--input binary								\
-		--output `env LANG=C $(OBJDUMP) -f cli/cli.o |				\
+		--output `env LC_ALL=C $(OBJDUMP) -f cli/cli.o |			\
 			grep 'file format' | awk '{print $$4}'`				\
-		--binary-architecture `env LANG=C $(OBJDUMP) -f cli/cli.o |		\
+		--binary-architecture `env LC_ALL=C $(OBJDUMP) -f cli/cli.o |		\
 				grep architecture | cut -f 1 -d , | awk '{print $$2}'`	\
 		$< $@
 
@@ -183,7 +186,7 @@ $(eval $(call define_from_arch.h,$1,LOADER_ARCH_CFLAGS))
 $(eval $(call define_from_arch.h,$1,LOADER_ADDRESS))
 
 LOADER_CFLAGS$1  += -fPIC -ffreestanding $(LOADER_ARCH_CFLAGS$1)
-LOADER_LDFLAGS$1 += -static -nostdlib -Wl$(BUILD_ID_NONE),-Ttext=$(LOADER_ADDRESS$1)
+LOADER_LDFLAGS$1 += -static -nostdlib -Wl$(BUILD_ID_NONE),-Ttext=$(LOADER_ADDRESS$1),-z,noexecstack
 
 loader/loader$1.o: loader/loader.c
 	@mkdir -p $$(dir $$@)

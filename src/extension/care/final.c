@@ -2,7 +2,7 @@
  *
  * This file is part of PRoot.
  *
- * Copyright (C) 2014 STMicroelectronics
+ * Copyright (C) 2015 STMicroelectronics
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -320,7 +320,7 @@ static int archive_readme_txt(const Care *care)
 		return -1;
 	}
 
-	N("This archive was created with CARE: http://reproducible.io. It contains:");
+	N("This archive was created with CARE: https://proot-me.github.io. It contains:");
 	N("");
 	N("re-execute.sh");
 	N("    start the re-execution of the initial command as originally");

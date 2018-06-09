@@ -2,7 +2,7 @@
  *
  * This file is part of PRoot.
  *
- * Copyright (C) 2014 STMicroelectronics
+ * Copyright (C) 2015 STMicroelectronics
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -39,6 +39,7 @@
 #include "execve/elf.h"
 #include "path/path.h"
 #include "path/temp.h"
+#include "path/binding.h"
 #include "tracee/tracee.h"
 #include "syscall/syscall.h"
 #include "syscall/sysnum.h"
@@ -252,6 +253,11 @@ static int add_load_info(const ElfHeader *elf_header,
 			return status;
 		break;
 
+	case PT_GNU_STACK:
+		data->load_info->needs_executable_stack |=
+			((PROGRAM_FIELD(*elf_header, *program_header, flags) & PF_X) != 0);
+		break;
+
 	default:
 		break;
 	}
@@ -454,10 +460,10 @@ static int expand_runner(Tracee* tracee, char host_path[PATH_MAX], char user_pat
 }
 
 extern unsigned char _binary_loader_exe_start;
-extern unsigned char _binary_loader_exe_size;
+extern unsigned char _binary_loader_exe_end;
 
 extern unsigned char WEAK _binary_loader_m32_exe_start;
-extern unsigned char WEAK _binary_loader_m32_exe_size;
+extern unsigned char WEAK _binary_loader_m32_exe_end;
 
 /**
  * Extract the built-in loader.  This function returns NULL if an
@@ -483,11 +489,11 @@ static char *extract_loader(const Tracee *tracee, bool wants_32bit_version)
 
 	if (wants_32bit_version) {
 		start = (void *) &_binary_loader_m32_exe_start;
-		size  = (size_t) &_binary_loader_m32_exe_size;
+		size  = (size_t)(&_binary_loader_m32_exe_end-&_binary_loader_m32_exe_start);
 	}
 	else {
 		start = (void *) &_binary_loader_exe_start;
-		size  = (size_t) &_binary_loader_exe_size;
+		size  = (size_t) (&_binary_loader_exe_end-&_binary_loader_exe_start);
 	}
 
 	status2 = write(fd, start, size);
@@ -505,6 +511,18 @@ static char *extract_loader(const Tracee *tracee, bool wants_32bit_version)
 	status = readlink_proc_pid_fd(getpid(), fd, path);
 	if (status < 0) {
 		note(tracee, ERROR, INTERNAL, "can't retrieve loader path (/proc/self/fd/)");
+		goto end;
+	}
+
+	status = access(path, X_OK);
+	if (status < 0) {
+		note(tracee, ERROR, INTERNAL,
+			"it seems the current temporary directory (%s) "
+			"is mounted with no execution permission.",
+			get_temp_directory());
+		note(tracee, INFO, USER,
+			"Please set PROOT_TMP_DIR env. variable to an alternate "
+			"location ('%s/tmp' for example).", get_root(tracee));
 		goto end;
 	}
 
