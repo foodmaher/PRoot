@@ -193,7 +193,7 @@ static int handle_option_0(Tracee *tracee, const Cli *cli, const char *value UNU
 
 static int handle_option_kill_on_exit(Tracee *tracee, const Cli *cli UNUSED, const char *value UNUSED)
 {
-        tracee->killall_on_exit = true;
+	tracee->killall_on_exit = true;
 	return 0;
 }
 

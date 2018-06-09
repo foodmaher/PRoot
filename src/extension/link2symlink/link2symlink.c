@@ -107,9 +107,9 @@ static int move_and_symlink_path(Tracee *tracee, Reg sysarg)
 	if (first_link) {
 		/*Move the original content to the new path. */
 		do {
-			sprintf(new_intermediate, "%s%04d", intermediate, intermediate_suffix);		
+			sprintf(new_intermediate, "%s%04d", intermediate, intermediate_suffix);
 			intermediate_suffix++;
-		} while ((access(new_intermediate,F_OK) != -1) && (intermediate_suffix < 1000)); 
+		} while ((access(new_intermediate,F_OK) != -1) && (intermediate_suffix < 1000));
 		strcpy(intermediate, new_intermediate);
 
 		strcpy(final, intermediate);
@@ -121,11 +121,11 @@ static int move_and_symlink_path(Tracee *tracee, Reg sysarg)
 		/* Symlink the intermediate to the final file.  */
 		status = symlink(final, intermediate);
 		if (status < 0)
-			return status;	
+			return status;
 
 		/* Symlink the original path to the intermediate one.  */
-        	status = symlink(intermediate, original);
-        	if (status < 0)
+			status = symlink(intermediate, original);
+			if (status < 0)
 			return status;
 	} else {
 		/*Move the original content to new location, by incrementing count at end of path. */
@@ -137,8 +137,8 @@ static int move_and_symlink_path(Tracee *tracee, Reg sysarg)
 		link_count++;
 
 		strncpy(new_final, final, strlen(final) - 4);
-		sprintf(new_final + strlen(final) - 4, "%04d", link_count);		
-		
+		sprintf(new_final + strlen(final) - 4, "%04d", link_count);
+
 		status = rename(final, new_final);
 		if (status < 0)
 			return status;
@@ -151,7 +151,7 @@ static int move_and_symlink_path(Tracee *tracee, Reg sysarg)
 		if (status < 0)
 			return status;
 	}
-	
+
 	status = set_sysarg_path(tracee, intermediate, sysarg);
 	if (status < 0)
 		return status;
@@ -161,7 +161,7 @@ static int move_and_symlink_path(Tracee *tracee, Reg sysarg)
 
 
 /* If path points a file that is a symlink to a file that begins
- *   with PREFIX, let the file be deleted, but also delete the 
+ *   with PREFIX, let the file be deleted, but also delete the
  *   symlink that was created and decremnt the count that is tacked
  *   to end of original file.
  */
@@ -189,7 +189,7 @@ static int decrement_link_count(Tracee *tracee, Reg sysarg)
 	if (status < 0)
 		return 0;
 
-	if (!S_ISLNK(statl.st_mode)) 
+	if (!S_ISLNK(statl.st_mode))
 		return 0;
 
 	size = my_readlink(original, intermediate);
@@ -203,7 +203,7 @@ static int decrement_link_count(Tracee *tracee, Reg sysarg)
 		name++;
 
 	/* Check if an l2s file is pointed to */
-	if (strncmp(name, PREFIX, strlen(PREFIX)) != 0) 
+	if (strncmp(name, PREFIX, strlen(PREFIX)) != 0)
 		return 0;
 
 	size = my_readlink(intermediate, final);
@@ -212,16 +212,16 @@ static int decrement_link_count(Tracee *tracee, Reg sysarg)
 
 	link_count = atoi(final + strlen(final) - 4);
 	link_count--;
-			
+
 	/* Check if it is or is not the last link to delete */
 	if (link_count > 0) {
 		strncpy(new_final, final, strlen(final) - 4);
-		sprintf(new_final + strlen(final) - 4, "%04d", link_count);		
-	
+		sprintf(new_final + strlen(final) - 4, "%04d", link_count);
+
 		status = rename(final, new_final);
 		if (status < 0)
-			return status;				
-			
+			return status;
+
 		strcpy(final, new_final);
 
 		/* Symlink the intermediate to the final file.  */
@@ -231,7 +231,7 @@ static int decrement_link_count(Tracee *tracee, Reg sysarg)
 
 		status = symlink(final, intermediate);
 		if (status < 0)
-			return status;				
+			return status;
 	} else {
 		/* If it is the last, delete the intermediate and final */
 		status = unlink(intermediate);
@@ -246,7 +246,7 @@ static int decrement_link_count(Tracee *tracee, Reg sysarg)
 }
 
 /**
- * Make it so fake hard links look like real hard link with respect to number of links and inode 
+ * Make it so fake hard links look like real hard link with respect to number of links and inode
  * This function returns -errno if an error occured, otherwise 0.
  */
 static int handle_sysexit_end(Tracee *tracee)
@@ -285,7 +285,7 @@ static int handle_sysexit_end(Tracee *tracee)
 		if (sysnum == PR_fstat64 || sysnum == PR_fstat) {
 			status = readlink_proc_pid_fd(tracee->pid, peek_reg(tracee, MODIFIED, SYSARG_1), original);
 			if (strcmp(original + strlen(original) - strlen(DELETED_SUFFIX), DELETED_SUFFIX) == 0)
-				original[strlen(original) - strlen(DELETED_SUFFIX)] = '\0'; 
+				original[strlen(original) - strlen(DELETED_SUFFIX)] = '\0';
 			if (status < 0)
 				return status;
 		} else {
@@ -319,7 +319,7 @@ static int handle_sysexit_end(Tracee *tracee)
 			}
 		}
 
-		if (!S_ISLNK(statl.st_mode)) 
+		if (!S_ISLNK(statl.st_mode))
 			return 0;
 
 		size = my_readlink(original, intermediate);
@@ -340,7 +340,7 @@ static int handle_sysexit_end(Tracee *tracee)
 			return size;
 
 		final_proc: status = lstat(final,&finalStat);
-		if (status < 0) 
+		if (status < 0)
 			return status;
 
 		finalStat.st_nlink = atoi(final + strlen(final) - 4);
@@ -478,9 +478,9 @@ int link2symlink_callback(Extension *extension, ExtensionEvent event,
 
 		case PR_unlinkat:
 			/* If path points a file that is a symlink to a file that begins
-			 *   with PREFIX, let the file be deleted, but also delete the 
+			 *   with PREFIX, let the file be deleted, but also delete the
 			 *   symlink that was created and decremnt the count that is tacked
-        		 *   to end of original file.
+			 *   to end of original file.
 			 */
 
 			status = decrement_link_count(tracee, SYSARG_2);
