@@ -309,7 +309,7 @@ static int handle_option_p(Tracee *tracee, const Cli *cli UNUSED, const char *va
 	return status;
 }
 
-static int handle_option_n(Tracee *tracee, const Cli *cli UNUSED, const char *value UNUSED)
+static int handle_option_n(Tracee *tracee, const Cli *cli UNUSED, const char *value)
 {
 	int status = 0;
 
