@@ -1,23 +1,16 @@
 #!/bin/sh
 
-which qemu-arm > /dev/null || {
-	echo "You need to install qemu-arm to run this script. On debian, run:"
-	echo "sudo apt-get install qemu-user"
-	exit 1
-}
-
-which wget > /dev/null || {
-	echo "You need to install wget to run this script. On debian, run:"
-	echo "sudo apt-get install wget"
-	exit 1
-}
-
-PATH=`pwd`:$PATH
-which proot > /dev/null || {
+app_name="qemu-arm wget proot"
+for app in "$app_name"; do
+which $app > /dev/null || {
+	if [ "$app" == "proot" ]; then
 	echo "Please compile proot first, and copy it to the current directory"
+	else
+	echo "You need to install qemu-arm to run this script. On debian, run:\n\"sudo apt-get $app\""
 	exit 1
-}
-
+	fi
+}; done
+PATH=`pwd`:$PATH
 PKGS=`cat slackware-devel.txt | tr '\n' ',' | sed 's@,@*,@g' | sed 's/,[*]$//' | sed 's/,$//'`
 echo PKGS "$PKGS"
 
